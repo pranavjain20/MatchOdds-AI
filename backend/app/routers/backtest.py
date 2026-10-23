@@ -4,10 +4,11 @@ import asyncio
 import json
 from typing import AsyncIterator, List
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from app.guards import require_admin
 from app.services import backtest as bt
 
 router = APIRouter(prefix="/api/backtest", tags=["backtest"])
@@ -42,7 +43,7 @@ class RunRequest(BaseModel):
     min_history: int = 10
 
 
-@router.post("/run")
+@router.post("/run", dependencies=[Depends(require_admin)])
 def run(req: RunRequest) -> dict:
     """Kick off a backtest in the background.
 

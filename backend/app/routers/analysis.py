@@ -6,7 +6,7 @@ import asyncio
 import json
 from typing import AsyncIterator
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -15,6 +15,7 @@ from app.services.analysis import (
     run_analysis_blocking,
     stream_analysis,
 )
+from app.guards import count_analysis
 from app.services.llm import get_llm_callable
 
 router = APIRouter(prefix="/api/analysis", tags=["analysis"])
@@ -33,7 +34,7 @@ def _game_description(req: AnalysisRequest) -> str:
     return f"{req.away_team} vs {req.home_team}, {req.game_date}"
 
 
-@router.post("/stream")
+@router.post("/stream", dependencies=[Depends(count_analysis)])
 async def stream(req: AnalysisRequest):
     """Run a single analysis mode and stream stdout lines via SSE."""
     if req.mode not in MODE_RUNNERS:
@@ -84,7 +85,7 @@ def _next_or_none(gen):
         return None
 
 
-@router.post("/run")
+@router.post("/run", dependencies=[Depends(count_analysis)])
 def run(req: AnalysisRequest) -> dict:
     """Synchronous variant — used by the Compare All flow."""
     if req.mode not in MODE_RUNNERS:

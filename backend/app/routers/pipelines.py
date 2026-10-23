@@ -1,7 +1,8 @@
 """Pipeline trigger + status endpoints."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.guards import require_admin
 from app.services import pipelines as pl
 
 router = APIRouter(prefix="/api/pipelines", tags=["pipelines"])
@@ -21,7 +22,7 @@ def status_one(name: str) -> dict:
     return res
 
 
-@router.post("/{name}")
+@router.post("/{name}", dependencies=[Depends(require_admin)])
 def start(name: str) -> dict:
     """Kick off a pipeline. Idempotent — running calls return the live job."""
     if name not in pl.PIPELINES:
@@ -30,7 +31,7 @@ def start(name: str) -> dict:
 
 
 # Back-compat alias for the original odds endpoint.
-@router.post("/odds-legacy")
+@router.post("/odds-legacy", dependencies=[Depends(require_admin)])
 def odds_legacy() -> dict:
     """Back-compat: same as POST /api/pipelines/odds."""
     return pl.start_pipeline("odds")
