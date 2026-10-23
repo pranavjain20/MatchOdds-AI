@@ -8,6 +8,7 @@ run.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -35,7 +36,14 @@ def load_upcoming_games() -> list[dict]:
         df = df.dropna(subset=["COMMENCE_TIME"])
         df["LOCAL_COMMENCE_TIME"] = df["COMMENCE_TIME"].dt.tz_convert("America/New_York")
 
-        now_local = pd.Timestamp.now(tz="America/New_York")
+        # DEMO_AS_OF (ISO time with offset) pins "now" to when the saved odds
+        # were pulled, so a demo running on last season's data still has a slate.
+        as_of = os.getenv("DEMO_AS_OF")
+        now_local = (
+            pd.Timestamp(as_of).tz_convert("America/New_York")
+            if as_of
+            else pd.Timestamp.now(tz="America/New_York")
+        )
         df = df[df["LOCAL_COMMENCE_TIME"] >= (now_local - pd.Timedelta(hours=3))].copy()
 
         if df.empty:
