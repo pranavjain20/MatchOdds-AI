@@ -8,7 +8,7 @@ if [ ! -L /app/chroma_db ]; then
   ln -s /app/data/chroma_db /app/chroma_db
 fi
 
-exec uvicorn backend.app.main:app \
+exec uvicorn app.main:app --app-dir /app/backend \
   --host 0.0.0.0 \
   --port "${PORT:-8000}" \
   --workers 1 \
