@@ -1,4 +1,5 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { IS_DEMO } from "./demo/config";
 import Layout from "./components/Layout";
 import MatchupPage from "./pages/MatchupPage";
 import ResearchPage from "./pages/ResearchPage";
@@ -11,8 +12,9 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<MatchupPage />} />
         <Route path="/research" element={<ResearchPage />} />
-        <Route path="/simulation" element={<SimulationPage />} />
-        <Route path="/data" element={<PipelinesPage />} />
+        {/* The demo has no historical odds to simulate on and can't run pipelines */}
+        <Route path="/simulation" element={IS_DEMO ? <Navigate to="/" replace /> : <SimulationPage />} />
+        <Route path="/data" element={IS_DEMO ? <Navigate to="/" replace /> : <PipelinesPage />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

@@ -22,7 +22,17 @@ const speedUp = Math.max(
   ...Object.values(analyses).map((events) => events[events.length - 1].ms / MAX_REPLAY_MS),
 );
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const aborted = () => new DOMException("The request was aborted", "AbortError");
+
+/** Waits like setTimeout, but rejects as soon as the request is cancelled, as fetch does. */
+const sleep = (ms: number, signal?: AbortSignal | null) =>
+  new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) return reject(aborted());
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener("abort", () => (clearTimeout(timer), reject(aborted())), {
+      once: true,
+    });
+  });
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -36,18 +46,23 @@ function recording(body: Record<string, string>): Recorded[] | undefined {
   return analyses[`${body.home_team}|${body.away_team}|${body.mode}`];
 }
 
-/** The SSE stream /analysis/stream sent, replayed with the recorded spacing. */
-function replayStream(events: Recorded[]): Response {
+/** The SSE stream /analysis/stream sent, replayed with the recorded spacing.
+ *  Cancelling the request (a new run, another game) stops it, as on the real backend. */
+function replayStream(events: Recorded[], signal?: AbortSignal | null): Response {
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       let previous = 0;
-      for (const { ms, event } of events) {
-        await sleep((ms - previous) / speedUp);
-        previous = ms;
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+      try {
+        for (const { ms, event } of events) {
+          await sleep((ms - previous) / speedUp, signal);
+          previous = ms;
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+        }
+        controller.close();
+      } catch (err) {
+        controller.error(err);
       }
-      controller.close();
     },
   });
   return new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
@@ -71,7 +86,9 @@ export async function demoFetch(input: RequestInfo | URL, init: RequestInit = {}
     if (path === "/analysis/stream" || path === "/analysis/run") {
       const events = recording(body);
       if (!events) return notFound("That analysis");
-      return path === "/analysis/stream" ? replayStream(events) : replayRun(events);
+      return path === "/analysis/stream"
+        ? replayStream(events, init.signal)
+        : replayRun(events);
     }
     if (path.startsWith("/pipelines/") || path === "/backtest/run") {
       return json({ detail: TURNED_OFF }, 403);
