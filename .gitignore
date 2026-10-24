@@ -15,3 +15,13 @@ frontend/dist/
 frontend/.vite/
 backend/.venv/
 backend/__pycache__/
+frontend/dist-demo/
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
+# Working notes and raw run logs (kept locally, not published)
+AUDIT.md
+STATUS_AND_HANDOFF.md
+backtest_*.log
+proposal.pdf

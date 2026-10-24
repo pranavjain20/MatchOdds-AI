@@ -266,8 +266,6 @@ To be honest about, in the final report:
 
 ```
 MatchOdds-AI/
-├── proposal.pdf                    # original proposal (authoritative spec)
-├── AUDIT.md                        # day-0 baseline audit
 ├── RESULTS.md                      # this document
 ├── README.md                       # quick-start + project overview
 ├── requirements.txt                # Python dependencies
