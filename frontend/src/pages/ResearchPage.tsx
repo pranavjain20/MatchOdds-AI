@@ -24,6 +24,7 @@ import { StatChip } from "@/components/StatChip";
 import { ChartTooltip } from "@/components/ChartTooltip";
 import { cn, formatNumber, methodDisplayName } from "@/lib/utils";
 import { useBacktestJob } from "@/hooks/useBacktestJob";
+import { IS_DEMO } from "@/demo/config";
 import type { BacktestSummaryRow, CalibrationRow, PredictionRow } from "@/types";
 
 const NUMERIC_METRICS = [
@@ -89,6 +90,7 @@ export default function ResearchPage() {
     <div className="space-y-6">
       <Hero />
 
+      {!IS_DEMO && (
       <Panel title="Backtest Controls" subtitle="Run a fresh sweep against historical data.">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <Field label="Number of Games">
@@ -145,6 +147,7 @@ export default function ResearchPage() {
           <p className="mt-3 text-xs text-loss">{job.error}</p>
         )}
       </Panel>
+      )}
 
       {(job.status === "running" || job.output.length > 0) && (
         <BacktestLogPane

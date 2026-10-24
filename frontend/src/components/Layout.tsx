@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Activity, BarChart3, Coins, Cpu, Database, Wifi, WifiOff } from "lucide-react";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { IS_DEMO, REPO_URL } from "@/demo/config";
 
 const NAV_ITEMS = [
   { to: "/", label: "Matchup", icon: Activity, exact: true },
@@ -10,6 +11,10 @@ const NAV_ITEMS = [
   { to: "/simulation", label: "ROI Sim", icon: Coins },
   { to: "/data", label: "Data", icon: Database },
 ];
+
+// The ROI simulator needs historical bookmaker odds the backtest never had, and the
+// Data page starts pipelines, so the demo shows only the matchup and research pages
+const VISIBLE_NAV = IS_DEMO ? NAV_ITEMS.slice(0, 2) : NAV_ITEMS;
 
 export default function Layout() {
   const { data: health } = useQuery({
@@ -41,7 +46,7 @@ export default function Layout() {
           </NavLink>
 
           <nav className="flex items-center gap-1 rounded-2xl border border-white/[0.06] bg-bg-panel/60 p-1 backdrop-blur-xl">
-            {NAV_ITEMS.map(({ to, label, icon: Icon, exact }) => (
+            {VISIBLE_NAV.map(({ to, label, icon: Icon, exact }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -67,6 +72,19 @@ export default function Layout() {
         </div>
         <div className="glow-divider mx-auto h-px max-w-7xl" />
       </header>
+
+      {IS_DEMO && (
+        <div className="mx-auto max-w-7xl px-6 pt-6">
+          <p className="rounded-xl border border-white/[0.06] bg-bg-panel/60 px-4 py-3 text-sm text-slate-300">
+            This demo replays real output. Every game, analysis and result here was produced by
+            the real system on last season&rsquo;s playoff games, and the analyses replay faster than
+            they ran.{" "}
+            <a href={REPO_URL} className="font-semibold text-accent hover:underline">
+              Code on GitHub
+            </a>
+          </p>
+        </div>
+      )}
 
       <main className="mx-auto max-w-7xl px-6 py-8 pb-24">
         <Outlet />

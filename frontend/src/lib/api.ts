@@ -26,9 +26,15 @@ import type {
   TeamStats,
   UpcomingGame,
 } from "@/types";
+import { IS_DEMO } from "@/demo/config";
 
 const API_ROOT = (import.meta.env.VITE_API_BASE ?? "").replace(/\/$/, "");
 const BASE = `${API_ROOT}/api`;
+
+// The browser demo answers from recorded output; the import is dropped from normal builds
+const request: typeof fetch = IS_DEMO
+  ? async (input, init) => (await import("@/demo/server")).demoFetch(input, init)
+  : (input, init) => fetch(input, init);
 
 async function get<T>(path: string, params?: Record<string, string | number | undefined>): Promise<T> {
   const url = new URL(BASE + path, window.location.origin);
@@ -39,7 +45,7 @@ async function get<T>(path: string, params?: Record<string, string | number | un
       }
     }
   }
-  const res = await fetch(url.toString());
+  const res = await request(url.toString());
   if (!res.ok) {
     throw new Error(`GET ${path} failed: ${res.status}`);
   }
@@ -47,7 +53,7 @@ async function get<T>(path: string, params?: Record<string, string | number | un
 }
 
 async function post<T>(path: string, body?: unknown): Promise<T> {
-  const res = await fetch(BASE + path, {
+  const res = await request(BASE + path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -133,7 +139,7 @@ export async function streamBacktest(
   onEvent: (evt: BacktestStreamEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  const response = await fetch(BASE + "/backtest/stream", {
+  const response = await request(BASE + "/backtest/stream", {
     method: "GET",
     signal,
   });
@@ -174,7 +180,7 @@ export async function streamAnalysis(
   onEvent: (evt: StreamEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  const response = await fetch(BASE + "/analysis/stream", {
+  const response = await request(BASE + "/analysis/stream", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),

@@ -24,6 +24,7 @@ import { LiveTrace } from "@/components/LiveTrace";
 import { AnalysisReport } from "@/components/AnalysisReport";
 import { CompareCards } from "@/components/CompareCards";
 import { useStreamingAnalysis } from "@/hooks/useStreamingAnalysis";
+import { IS_DEMO } from "@/demo/config";
 import type {
   AnalysisMode,
   MarketConsensus,
@@ -262,7 +263,7 @@ export default function MatchupPage() {
             : "Pick an upcoming matchup to analyse"
         }
         action={
-          <div className="flex items-center gap-2">
+          IS_DEMO ? undefined : <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => {
